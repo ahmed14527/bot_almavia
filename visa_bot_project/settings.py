@@ -48,6 +48,13 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
+
+
+CELERY_BROKER_URL = "redis://default:7N304sdHrgxKebbK75PXTqfkXyu7n3Tw@redis-14218.c72.eu-west-1-2.ec2.redns.redis-cloud.com:14218"
+
+
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
