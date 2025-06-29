@@ -1,4 +1,3 @@
-# booking/management/commands/run_bot.py
 from django.core.management.base import BaseCommand
 from booking.models import BookingRequest
 from booking.bot_runner import run_bot
@@ -11,7 +10,20 @@ class Command(BaseCommand):
 
         for req in pending:
             self.stdout.write(f"🔄 Processing: {req.email}")
-            success = run_bot(req.email, req.password)
+            try:
+                success = run_bot(
+                    email=req.email,
+                    password=req.password,
+                    passport_number=req.passport_number,
+                    phone_number=req.phone_number,
+                    birth_date=req.birth_date,
+                    nationality=req.nationality,
+                )
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"❌ Error processing {req.email}: {e}"))
+                req.status = "failed"
+                req.save()
+                continue
 
             req.status = "success" if success else "failed"
             req.save()
