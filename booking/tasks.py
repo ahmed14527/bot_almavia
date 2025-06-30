@@ -1,34 +1,37 @@
-from celery import shared_task
-from concurrent.futures import ThreadPoolExecutor
+from celery import shared_task, group
 from booking.bot_runner import run_bot
-from booking.models import BookingRequest
 
-@shared_task
-def run_booking_bot_task(booking_id):
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def run_booking_bot_task(self, account_data):
+    """
+    account_data: dict يحتوي على مفاتيح مثل:
+        email, password, passport_number, nationality, birth_date, phone_number, passport_image_path
+    """
     try:
-        booking = BookingRequest.objects.get(id=booking_id)
-        print(f"⏳ Running bot for: {booking.email}")
+        print(f"⏳ Running bot for: {account_data.get('email')}")
 
-        # تمرير كل البيانات المطلوبة إلى run_bot
         success = run_bot(
-            email=booking.email,
-            password=booking.password,
-            passport_number=booking.passport_number,
-            nationality=booking.nationality,
-            birth_date=booking.birth_date,
-            phone_number=booking.phone_number,
-            passport_image_path=booking.passport_image.path if booking.passport_image else None
+            email=account_data.get('email'),
+            password=account_data.get('password'),
+            passport_number=account_data.get('passport_number'),
+            nationality=account_data.get('nationality'),
+            birth_date=account_data.get('birth_date'),
+            phone_number=account_data.get('phone_number'),
+            passport_image_path=account_data.get('passport_image_path')
         )
-        
-        booking.status = "success" if success else "failed"
-        booking.save()
-        print(f"✅ Finished for: {booking.email}")
+
+        print(f"✅ Finished for: {account_data.get('email')} with status: {'success' if success else 'failed'}")
+        return success
+
     except Exception as e:
-        print(f"❌ Error in task for ID {booking_id}: {e}")
+        print(f"❌ Error in task for email {account_data.get('email')}: {e}")
+        raise self.retry(exc=e)
 
 @shared_task
 def run_booking_bot_parallel(accounts):
     """
+    accounts: قائمة dict لكل حساب.
+    مثال:
     accounts = [
         {
             "email": "email1@example.com",
@@ -42,19 +45,6 @@ def run_booking_bot_parallel(accounts):
         ...
     ]
     """
-    def run_single(account):
-        print(f"🔐 Starting for: {account['email']}")
-        result = run_bot(
-            email=account["email"],
-            password=account["password"],
-            passport_number=account["passport_number"],
-            nationality=account["nationality"],
-            birth_date=account["birth_date"],
-            phone_number=account["phone_number"],
-            passport_image_path=account.get("passport_image_path")
-        )
-        print(f"✅ {account['email']} → Success: {result}")
-        return result
-
-    with ThreadPoolExecutor(max_workers=len(accounts)) as executor:
-        executor.map(run_single, accounts)
+    tasks = [run_booking_bot_task.s(account) for account in accounts]
+    job = group(tasks)()
+    return job.id

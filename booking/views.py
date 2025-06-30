@@ -50,7 +50,7 @@ class UploadAccountsView(APIView):
         if not excel_file:
             return Response({"error": "File is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # تحقق بسيط من نوع الملف
+        # التحقق من نوع الملف
         if not excel_file.name.endswith(('.xls', '.xlsx')):
             return Response({"error": "Invalid file type. Please upload an Excel file."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -59,10 +59,39 @@ class UploadAccountsView(APIView):
         except Exception as e:
             return Response({"error": f"Error reading Excel file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if "email" not in df.columns or "password" not in df.columns:
-            return Response({"error": "Excel must have 'email' and 'password' columns"}, status=status.HTTP_400_BAD_REQUEST)
+        required_columns = ['email', 'password', 'passport_number', 'phone_number', 'birth_date', 'nationality']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            return Response({"error": f"Missing columns in Excel: {', '.join(missing_columns)}"}, status=400)
 
-        accounts = df[["email", "password"]].values.tolist()
+        accounts = []
+        for _, row in df.iterrows():
+            try:
+                birth_date = row['birth_date']
+                if isinstance(birth_date, str):
+                    from django.utils.dateparse import parse_date
+                    birth_date = parse_date(birth_date)
+                elif hasattr(birth_date, 'to_pydatetime'):
+                    birth_date = birth_date.to_pydatetime().date()
+
+                accounts.append({
+                    "email": row['email'],
+                    "password": row['password'],
+                    "passport_number": row['passport_number'],
+                    "nationality": row['nationality'],
+                    "birth_date": birth_date,
+                    "phone_number": str(row['phone_number']),
+                    "passport_image_path": row.get('passport_image_path')  # اختياري لو موجود
+                })
+            except Exception as e:
+                print(f"❌ Error in row: {row} → {e}")
+                continue
+
+        if not accounts:
+            return Response({"error": "No valid accounts found in the file."}, status=400)
+
+        # إرسال المهام إلى celery
+        from .tasks import run_booking_bot_parallel
         run_booking_bot_parallel.delay(accounts)
 
-        return Response({"message": f"{len(accounts)} accounts processing started."}, status=status.HTTP_200_OK)
+        return Response({"message": f"✅ Started processing {len(accounts)} accounts."}, status=200)
