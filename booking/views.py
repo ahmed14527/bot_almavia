@@ -8,7 +8,9 @@ import pandas as pd
 from rest_framework.parsers import MultiPartParser, FormParser
 from celery.result import AsyncResult
 from rest_framework.decorators import api_view
-
+from celery.result import GroupResult
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 class BookingRequestCreateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -30,17 +32,16 @@ class BookingRequestCreateView(APIView):
 
 
 @api_view(["GET"])
-def check_task_status(request, task_id):
-    result = AsyncResult(task_id)
-    if result.state == "PENDING":
-        return Response({"state": result.state, "status": "Waiting to be processed"})
-    elif result.state == "SUCCESS":
-        return Response({"state": result.state, "result": result.result})
-    elif result.state == "FAILURE":
-        return Response({"state": result.state, "error": str(result.result)})
-    else:
-        return Response({"state": result.state, "status": "Processing"})
+def check_group_status(request, group_id):
+    result = GroupResult.restore(group_id)
+    if not result:
+        return Response({"error": "Group ID not found."}, status=404)
 
+    return Response({
+        "completed": result.completed_count(),
+        "total": len(result),
+        "statuses": [r.status for r in result.results]
+    })
 
 class UploadAccountsView(APIView):
     parser_classes = [MultiPartParser]
