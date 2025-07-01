@@ -30,7 +30,7 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 ALLOWED_HOSTS = ['botalmavia-production.up.railway.app', 'localhost', '127.0.0.1']
-
+CSRF_TRUSTED_ORIGINS = ['https://botalmavia-production.up.railway.app']
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "t")
 
 
