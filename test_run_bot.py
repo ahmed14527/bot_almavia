@@ -6,9 +6,9 @@ if __name__ == "__main__":
     password = "ZZZzzzCCCccc123456!@#"
     passport_number = "A12345678"
     nationality = "Egyptian"
-    birth_date = "15/05/1990"  # أو استخدم datetime.date(1990,5,15)
+    birth_date = "15/05/1990"  
     phone_number = "01234567890"
-    passport_image_path = "E:\\image (2).png"  # لو عندك صورة، لو مش موجودة ممكن تحط None
+    passport_image_path = "E:\\image (2).png"  
 
     success = run_bot(
         email=email,

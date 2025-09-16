@@ -16,7 +16,6 @@ class BookingRequestCreateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        # التأكد من وجود nationality
         if 'nationality' not in request.data:
             return Response({"error": "nationality field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -82,7 +81,7 @@ class UploadAccountsView(APIView):
                     "nationality": row['nationality'],
                     "birth_date": birth_date,
                     "phone_number": str(row['phone_number']),
-                    "passport_image_path": row.get('passport_image_path')  # اختياري لو موجود
+                    "passport_image_path": row.get('passport_image_path')  
                 })
             except Exception as e:
                 print(f"❌ Error in row: {row} → {e}")
@@ -91,7 +90,6 @@ class UploadAccountsView(APIView):
         if not accounts:
             return Response({"error": "No valid accounts found in the file."}, status=400)
 
-        # إرسال المهام إلى celery
         from .tasks import run_booking_bot_parallel
         run_booking_bot_parallel.delay(accounts)
 

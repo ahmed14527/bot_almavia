@@ -1,7 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from booking.bot_runner import run_bot
 
-# ✅ الإيميلات والباسوردات
 accounts = [
     ("email1@example.com", "password1"),
     ("email2@example.com", "password2"),

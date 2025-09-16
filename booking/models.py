@@ -7,11 +7,11 @@ class BookingRequest(models.Model):
     passport_number = models.CharField(max_length=50)
     phone_number = models.CharField(max_length=20)
     birth_date = models.DateField()
-    nationality = models.CharField(max_length=100)  # ✅ حقل الجنسية المضاف
-    passport_image = models.ImageField(upload_to='passport_images/')  # Requires MEDIA settings
+    nationality = models.CharField(max_length=100)  
+    passport_image = models.ImageField(upload_to='passport_images/')  
 
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=50, default="pending")  # pending / success / failed
+    status = models.CharField(max_length=50, default="pending")  
 
     def __str__(self):
         return f"{self.email} - {self.status}"

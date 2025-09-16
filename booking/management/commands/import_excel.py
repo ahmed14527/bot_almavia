@@ -14,7 +14,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         file_path = kwargs['file_path']
 
-        # تحميل الملف
         if file_path.endswith('.csv'):
             df = pd.read_csv(file_path)
         else:
@@ -42,7 +41,7 @@ class Command(BaseCommand):
                     "nationality": row['nationality'],
                     "birth_date": birth_date,
                     "phone_number": row['phone_number'],
-                    "passport_image_path": None  # ضيفها لو عندك مسار في الملف
+                    "passport_image_path": None  
                 }
 
                 run_booking_bot_task.delay(account)
