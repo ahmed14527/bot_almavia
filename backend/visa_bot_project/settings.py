@@ -10,12 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(os.path.join(BASE_DIR.parent, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -109,7 +111,7 @@ WSGI_APPLICATION = 'visa_bot_project.wsgi.application'
 import dj_database_url
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL:
+if DATABASE_URL and 'test' not in sys.argv and not os.environ.get("USE_SQLITE"):
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,

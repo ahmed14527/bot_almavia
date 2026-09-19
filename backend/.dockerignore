@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.class
+*.sqlite3
+.env
+.git
+.gitignore
+*.png
+media/
+staticfiles/

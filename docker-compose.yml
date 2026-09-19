@@ -33,7 +33,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     image: visa_bot_backend:latest
     container_name: visa_bot_backend

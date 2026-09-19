@@ -34,6 +34,28 @@ The system runs as an isolated, resilient 5-tier containerized stack via Docker 
 4. **`visa_bot_postgres`**: PostgreSQL 16 relational database with persistent named volume `postgres_data`.
 5. **`visa_bot_redis`**: Redis 7 in-memory broker for Celery task queuing and caching with persistent named volume `redis_data`.
 
+### 📁 Repository Structure
+```text
+bot_almavia/
+├── backend/                       # Isolated Django Backend microservice
+│   ├── booking/                   # Booking application (models, views, bot_runner)
+│   ├── visa_bot_project/          # Project configurations, settings, wsgi, celery
+│   ├── docker/                    # Backend & Celery worker entrypoints
+│   ├── Dockerfile                 # Python 3.11 + Chromium & Chromedriver
+│   ├── manage.py                  # Django CLI
+│   └── requirements.txt           # Python backend dependencies
+├── frontend/                      # Isolated React 19 SPA microservice
+│   ├── src/                       # Components, pages, contexts (Light/Dark themes)
+│   ├── Dockerfile                 # Multi-stage build (Node 22 -> Nginx Alpine)
+│   └── nginx.conf                 # Production reverse proxy configuration
+├── docker/                        # Proxy configuration
+│   └── nginx/default.conf
+├── docker-compose.yml             # Full 5-service orchestration
+├── compose.prod.yml               # Production limits and log rotation
+├── .env.example                   # Environment configuration template
+└── README.md                      # System documentation
+```
+
 ---
 
 ## 🚀 Quick Start
