@@ -58,29 +58,81 @@ bot_almavia/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 How to Run the Project
 
-### 1. Prerequisites
-- Docker Engine 24+ & Docker Compose v2+
-- Port `80` (or configured `HTTP_PORT`) free on host
+You can run the system using **Docker Compose (Recommended)** or directly in **Local Development Mode**.
 
-### 2. Environment Configuration
-Copy the sample environment file:
+### Option A: Docker Compose (Recommended Production & Testing)
+
+This launches the entire stack (PostgreSQL, Redis, Django backend, Celery worker with Chromium, and Nginx React frontend) with a single command.
+
 ```bash
+# 1. Clone or navigate to the project directory
+cd bot_almavia
+
+# 2. Setup environment variables
 cp .env.example .env
-```
-Ensure `.env` contains your secure database and secret key credentials.
 
-### 3. Build & Run
-```bash
-# Build and launch all 5 containers in background
+# 3. Build and launch all 5 containers
 docker compose up -d --build
 
-# Verify container health status
+# 4. Check container health status
 docker compose ps
 ```
 
 All 5 services should report `Up (healthy)`.
+- Open Dashboard: [http://localhost/](http://localhost/)
+- Open Django Admin: [http://localhost/admin/](http://localhost/admin/)
+
+---
+
+### Option B: Local Development Mode (Without Docker)
+
+If you prefer to run services natively on your host machine:
+
+#### 1. Run Backend (Django + Celery)
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+# Windows:
+.\venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Apply database migrations (uses SQLite by default if DATABASE_URL is unset)
+python manage.py migrate
+
+# Create an administrator account
+python manage.py createsuperuser
+
+# Run Django development server on port 8000
+python manage.py runserver 8000
+```
+
+To run the background Celery worker locally (requires a running Redis instance or falls back to background threads):
+```bash
+# In another terminal inside backend/
+celery -A visa_bot_project worker --loglevel=info
+```
+
+#### 2. Run Frontend (React 19 + Vite)
+```bash
+# In a new terminal, navigate to frontend directory
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start Vite development server
+npm run dev
+```
+- Open Vite Dev Server: [http://localhost:5173/](http://localhost:5173/) (automatically proxies `/api/` to `http://localhost:8000`).
 
 ---
 
