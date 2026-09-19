@@ -24,14 +24,17 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 import os
 from django.core.exceptions import ImproperlyConfigured
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    raise ImproperlyConfigured("The SECRET_KEY setting must not be empty.")
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-embassy-bot-secret-key-development-2025-almaviva')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-ALLOWED_HOSTS = ['botalmavia-production.up.railway.app', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://botalmavia-production.up.railway.app']
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "t")
+ALLOWED_HOSTS = ['botalmavia-production.up.railway.app', 'localhost', '127.0.0.1', '*']
+CSRF_TRUSTED_ORIGINS = [
+    'https://botalmavia-production.up.railway.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+]
+DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "t")
 
 
 # Application definition
@@ -43,32 +46,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'rest_framework',
     'booking',
-    "rest_framework",
+]
 
-    ]
-
-
-
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-
 CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_REJECT_ON_WORKER_LOST = True
-CELERY_ACKS_LATE = True
-CELERY_TASK_DEFAULT_RETRY_DELAY = 0  # optional
-CELERY_TASK_MAX_RETRIES = 1
-
-
-
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-
-
-
+CELERY_TASK_DEFAULT_RETRY_DELAY = 10
+CELERY_TASK_MAX_RETRIES = 2
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,6 +70,21 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
 
 ROOT_URLCONF = 'visa_bot_project.urls'
 
@@ -96,26 +105,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'visa_bot_project.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-#DATABASES = {
-    #'default': {
-   #     'ENGINE': 'django.db.backends.sqlite3',
-  #      'NAME': BASE_DIR / 'db.sqlite3',
- #   }
-#}
-
+# Database configuration
 import dj_database_url
 
-DATABASES = {
-    'default': dj_database_url.parse(
-        os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=os.environ.get("DB_SSL_REQUIRE", "False").lower() in ("true", "1", "t")
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -155,9 +163,10 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Selenium & Automation Settings
+SELENIUM_HEADLESS = os.environ.get("SELENIUM_HEADLESS", "true").lower() in ("true", "1", "t")
+BOT_SIMULATION_MODE = os.environ.get("BOT_SIMULATION_MODE", "false").lower() in ("true", "1", "t")
+

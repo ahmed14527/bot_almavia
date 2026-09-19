@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans antialiased transition-colors duration-200;
+    min-height: 100vh;
+  }
+}
+
+/* =========================================================
+   LIGHT MODE DESIGN SYSTEM
+   Activated when 'html.light' class is applied
+   ========================================================= */
+
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f8fafc !important; /* slate-50 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+/* Containers and Backgrounds */
+html.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-slate-950\/60 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/70 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+html.light .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/40 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-slate-800 {
+  background-color: #f1f5f9 !important; /* slate-100 */
+  color: #1e293b !important;
+}
+
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/40,
+html.light .bg-slate-800\/30 {
+  background-color: #f8fafc !important;
+}
+
+/* Borders */
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
+html.light .border-slate-900,
+html.light .border-slate-700,
+html.light .border-slate-700\/60,
+html.light .border-slate-700\/50 {
+  border-color: #e2e8f0 !important; /* slate-200 */
+}
+
+/* Typography */
+html.light .text-white {
+  color: #0f172a !important; /* slate-900 */
+}
+
+html.light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important; /* slate-500 */
+}
+
+html.light .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Exemptions for primary solid colored buttons and pills */
+html.light button.bg-blue-600,
+html.light button.bg-blue-600 *,
+html.light .bg-blue-600 .text-white,
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-600 *,
+html.light button.bg-rose-600,
+html.light button.bg-rose-600 *,
+html.light button.bg-amber-600,
+html.light button.bg-amber-600 *,
+html.light .text-white.bg-blue-600 {
+  color: #ffffff !important;
+}
+
+/* Colored accent text - high contrast in light mode */
+html.light .text-blue-400 {
+  color: #2563eb !important; /* blue-600 */
+}
+
+html.light .text-emerald-400 {
+  color: #059669 !important; /* emerald-600 */
+}
+
+html.light .text-amber-400 {
+  color: #d97706 !important; /* amber-600 */
+}
+
+html.light .text-rose-400 {
+  color: #e11d48 !important; /* rose-600 */
+}
+
+html.light .text-cyan-400 {
+  color: #0891b2 !important; /* cyan-600 */
+}
+
+html.light .text-purple-400 {
+  color: #7c3aed !important; /* purple-600 */
+}
+
+/* Badge backgrounds in light mode */
+html.light .bg-blue-500\/10,
+html.light .bg-blue-600\/20,
+html.light .bg-blue-600\/15 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-600\/20 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light .bg-amber-500\/15,
+html.light .bg-amber-600\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-600\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light .bg-cyan-500\/10 {
+  background-color: #ecfeff !important;
+  border-color: #a5f3fc !important;
+}
+
+html.light .bg-purple-500\/10 {
+  background-color: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+
+/* Cards & Elevated Containers */
+html.light .shadow-2xl,
+html.light .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .shadow-md,
+html.light .shadow-sm {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Top Dashboard Banner */
+html.light .from-blue-900\/30 {
+  background-image: linear-gradient(to right, #eff6ff, #ffffff, #ffffff) !important;
+  border-color: #dbeafe !important;
+}
+
+/* Form Inputs, Selects & Textareas */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  background-color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Tables in Light Mode */
+html.light thead {
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light thead th {
+  color: #475569 !important;
+}
+
+html.light tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+html.light tbody tr {
+  border-bottom-color: #f1f5f9 !important;
+}
+
+/* Dropzone in Excel Page */
+html.light .border-dashed {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Header & Footer */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light footer {
+  background-color: #ffffff !important;
+  border-top-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+html.light nav button:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light nav button.bg-blue-600\/15 {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+}
+
+/* Bot logo box in Navbar */
+html.light .bg-slate-950.rounded-\[10px\],
+html.light .bg-slate-950.rounded-\[14px\] {
+  background-color: #ffffff !important;
+}

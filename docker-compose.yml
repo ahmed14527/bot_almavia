@@ -1,0 +1,124 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: visa_bot_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-visa_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-visa_bot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bot_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: visa_bot_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bot_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: visa_bot_backend:latest
+    container_name: visa_bot_backend
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-prod-key-almaviva-2025}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,frontend,*}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres_secure_password@postgres:5432/visa_bot}
+      DB_SSL_REQUIRE: "False"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      SELENIUM_HEADLESS: "true"
+      BOT_SIMULATION_MODE: ${BOT_SIMULATION_MODE:-false}
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/dashboard/stats/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    networks:
+      - bot_network
+
+  worker:
+    image: visa_bot_backend:latest
+    container_name: visa_bot_worker
+    restart: unless-stopped
+    entrypoint: ["/app/docker/worker-entrypoint.sh"]
+    command: ["celery", "-A", "visa_bot_project", "worker", "--loglevel=info", "-c", "2"]
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-prod-key-almaviva-2025}
+      DEBUG: ${DEBUG:-False}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres_secure_password@postgres:5432/visa_bot}
+      DB_SSL_REQUIRE: "False"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      SELENIUM_HEADLESS: "true"
+      BOT_SIMULATION_MODE: ${BOT_SIMULATION_MODE:-false}
+      CHROME_BIN: /usr/bin/chromium
+      CHROMEDRIVER_PATH: /usr/bin/chromedriver
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      backend:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bot_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: visa_bot_frontend:latest
+    container_name: visa_bot_frontend
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  static_data:
+
+networks:
+  bot_network:
+    driver: bridge

@@ -1,57 +1,58 @@
-from celery import shared_task, group
+﻿import logging
+import threading
+from celery import shared_task
 from booking.bot_runner import run_bot
 
-@shared_task(bind=True, acks_late=True, max_retries=1, default_retry_delay=60)
-def run_booking_bot_task(self, account_data):
+logger = logging.getLogger(__name__)
+
+@shared_task(bind=True, acks_late=True, max_retries=1, default_retry_delay=30)
+def run_booking_bot_task(self, booking_id: int):
     """
-    account_data: dict يحتوي على مفاتيح مثل:
-        email, password, passport_number, nationality, birth_date, phone_number, passport_image_path
+    Celery task that executes the automated booking workflow for a BookingRequest.
     """
-    email = account_data.get("email")
+    from booking.models import BookingRequest
     try:
-        print(f"⏳ Running bot for: {email}")
+        booking = BookingRequest.objects.get(id=booking_id)
+        booking.celery_task_id = getattr(self.request, 'id', '') or ''
+        booking.save(update_fields=['celery_task_id', 'updated_at'])
+    except BookingRequest.DoesNotExist:
+        logger.error(f"BookingRequest {booking_id} does not exist.")
+        return {"booking_id": booking_id, "status": "not_found"}
 
-        success = run_bot(
-            email=account_data.get("email"),
-            password=account_data.get("password"),
-            passport_number=account_data.get("passport_number"),
-            nationality=account_data.get("nationality"),
-            birth_date=account_data.get("birth_date"),
-            phone_number=account_data.get("phone_number"),
-            passport_image_path=account_data.get("passport_image_path"),
-        )
-
-        print(f"✅ Finished for: {email} with status: {'success' if success else 'failed'}")
-
-        if not success:
-            raise Exception("❌ Bot failed to complete successfully.")
-
-        return {"email": email, "status": "success"}
-
+    logger.info(f"Starting booking automation task for booking ID: {booking_id}")
+    try:
+        success = run_bot(booking_id=booking_id)
+        return {"booking_id": booking_id, "status": "success" if success else "failed"}
     except Exception as e:
-        print(f"❌ Error in task for {email}: {e}")
+        logger.error(f"Error in task for booking {booking_id}: {e}")
         raise self.retry(exc=e)
 
+def execute_in_background_thread(booking_id: int):
+    """
+    Direct asynchronous execution in a background thread when Celery is not active.
+    """
+    def worker():
+        try:
+            run_bot(booking_id=booking_id)
+        except Exception as e:
+            logger.error(f"Background thread error for booking {booking_id}: {e}")
 
-@shared_task
-def run_booking_bot_parallel(accounts):
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
+    return thread
+
+def dispatch_booking_job(booking_id: int, prefer_celery: bool = True):
     """
-    accounts: قائمة dict لكل حساب.
-    مثال:
-    accounts = [
-        {
-            "email": "email1@example.com",
-            "password": "pass1",
-            "passport_number": "A12345678",
-            "nationality": "Egypt",
-            "birth_date": "1990-05-15",
-            "phone_number": "01234567890",
-            "passport_image_path": "/path/to/image.jpg"
-        },
-        ...
-    ]
+    Smart dispatcher that attempts Celery first, falling back to background thread
+    if Redis / Celery broker is unavailable.
     """
-    task_group = group(run_booking_bot_task.s(account) for account in accounts)
-    result = task_group.apply_async()
-    print(f"🚀 Group task started: {result.id}")
-    return {"group_id": result.id, "total_accounts": len(accounts)}
+    if prefer_celery:
+        try:
+            result = run_booking_bot_task.delay(booking_id)
+            logger.info(f"Dispatched booking {booking_id} to Celery: {result.id}")
+            return {"type": "celery", "task_id": result.id}
+        except Exception as e:
+            logger.warning(f"Celery dispatch failed for {booking_id} ({e}), falling back to background thread.")
+
+    execute_in_background_thread(booking_id)
+    return {"type": "thread", "task_id": f"thread-{booking_id}"}

@@ -1,22 +1,30 @@
+﻿import sys
+import argparse
 from booking.bot_runner import run_bot
-from datetime import datetime
 
-if __name__ == "__main__":
-    email = "mohamedmordi69@gmail.com"
-    password = "ZZZzzzCCCccc123456!@#"
-    passport_number = "A12345678"
-    nationality = "Egyptian"
-    birth_date = "15/05/1990"  
-    phone_number = "01234567890"
-    passport_image_path = "E:\\image (2).png"  
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Test booking runner')
+    parser.add_argument('--booking-id', type=int, help='Booking ID from database')
+    parser.add_argument('--email', type=str, default='test@example.com')
+    parser.add_argument('--password', type=str, default='TestPassword123!')
+    parser.add_argument('--passport', type=str, default='A12345678')
+    parser.add_argument('--nationality', type=str, default='Egyptian')
+    parser.add_argument('--dob', type=str, default='15/05/1990')
+    parser.add_argument('--phone', type=str, default='01234567890')
+    parser.add_argument('--image', type=str, default=None)
+    parser.add_argument('--simulate', action='store_true', help='Run in simulation mode')
+
+    args = parser.parse_args()
 
     success = run_bot(
-        email=email,
-        password=password,
-        passport_number=passport_number,
-        nationality=nationality,
-        birth_date=birth_date,
-        phone_number=phone_number,
-        passport_image_path=passport_image_path
+        booking_id=args.booking_id,
+        email=args.email,
+        password=args.password,
+        passport_number=args.passport,
+        nationality=args.nationality,
+        birth_date=args.dob,
+        phone_number=args.phone,
+        passport_image_path=args.image,
+        simulate=args.simulate
     )
-    print("Success:", success)
+    print(f'Finished: Success = {success}')
